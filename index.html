@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全场景自适应思考协议 · ai-plus-prompt</title>
+<meta name="description" content="一套双模式自适应推理协议，封装为可安装的 Agent Skill。日常对话保持自然，硬约束问题自动进入四阶段推理，输出不留协议痕迹。">
+<style>
+  :root{
+    --paper:#F6F6F3;
+    --ink:#16181A;
+    --ink-2:#4E5459;
+    --ink-3:#6E747A;
+    --rule:#DDDEDA;
+    --rule-soft:#E7E8E3;
+    --accent:#2B4C7E;
+    --accent-wash:#E9EEF6;
+    --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+    --serif:"Source Han Serif SC","Noto Serif CJK SC","Songti SC","STSong",Georgia,serif;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --measure:47rem;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:1.0625rem;
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:var(--measure);
+    margin:0 auto;
+    padding:0 1.5rem;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:clamp(4.5rem,11vw,8rem) 0 clamp(3rem,6vw,4.5rem);
+  }
+  .kicker{
+    font-size:.8125rem;
+    color:var(--ink-3);
+    margin:0 0 1.75rem;
+    letter-spacing:.01em;
+  }
+  .kicker .dot{
+    display:inline-block;
+    width:.3rem;height:.3rem;
+    background:var(--accent);
+    border-radius:50%;
+    margin:0 .5rem .15rem;
+    vertical-align:middle;
+  }
+  h1{
+    font-size:clamp(2.1rem,4.6vw,3.1rem);
+    line-height:1.35;
+    font-weight:600;
+    margin:0 0 1.5rem;
+    letter-spacing:-.005em;
+  }
+  .lede{
+    font-size:1.125rem;
+    line-height:1.9;
+    color:var(--ink-2);
+    margin:0;
+    max-width:34rem;
+  }
+
+  /* ---------- the two-mode demo ---------- */
+  .duet{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0;
+    margin-top:clamp(3rem,6vw,4.25rem);
+    border-top:1px solid var(--rule);
+  }
+  .duet-col{
+    padding:1.75rem 1.75rem 0 0;
+  }
+  .duet-col + .duet-col{
+    padding-left:1.75rem;
+    border-left:1px solid var(--rule-soft);
+  }
+  .mode-tag{
+    font-size:.8125rem;
+    font-weight:600;
+    color:var(--ink);
+    margin:0 0 .25rem;
+  }
+  .mode-sub{
+    font-size:.8125rem;
+    color:var(--ink-3);
+    margin:0 0 1.25rem;
+  }
+  .ask{
+    font-size:.9375rem;
+    color:var(--ink-3);
+    margin:0 0 1rem;
+    padding-left:.9rem;
+    border-left:2px solid var(--rule);
+  }
+  .reply{
+    font-family:var(--serif);
+    font-size:1.0625rem;
+    line-height:1.95;
+    margin:0;
+    color:var(--ink);
+  }
+  .reply.tight{
+    line-height:1.8;
+  }
+  .reply .step{
+    display:block;
+    margin-bottom:.45rem;
+  }
+  .reply .step:last-child{margin-bottom:0}
+
+  /* ---------- sections ---------- */
+  section{
+    padding:clamp(3.25rem,7vw,5.5rem) 0;
+    border-top:1px solid var(--rule);
+  }
+  h2{
+    font-size:clamp(1.25rem,2.2vw,1.5rem);
+    font-weight:600;
+    line-height:1.5;
+    margin:0 0 1.75rem;
+    letter-spacing:-.003em;
+  }
+  h2 .num{
+    color:var(--accent);
+    font-weight:600;
+    margin-right:.7em;
+  }
+  h3{
+    font-size:1.0625rem;
+    font-weight:600;
+    margin:2.5rem 0 .75rem;
+  }
+  p{margin:0 0 1.15rem}
+  p:last-child{margin-bottom:0}
+  .muted{color:var(--ink-2)}
+  .small{font-size:.9375rem;line-height:1.85}
+
+  /* ---------- symptom list ---------- */
+  .symptoms{
+    list-style:none;
+    margin:0 0 2rem;
+    padding:0;
+    border-top:1px solid var(--rule-soft);
+  }
+  .symptoms li{
+    padding:1.05rem 0;
+    border-bottom:1px solid var(--rule-soft);
+    display:grid;
+    grid-template-columns:1.6rem 1fr;
+    gap:.9rem;
+    font-size:1rem;
+    line-height:1.8;
+  }
+  .symptoms .mark{
+    color:var(--ink-3);
+    font-variant-numeric:tabular-nums;
+    font-size:.875rem;
+    padding-top:.18rem;
+  }
+  .symptoms b{font-weight:600}
+  .symptoms span.body{color:var(--ink-2)}
+
+  /* ---------- tables ---------- */
+  .table-scroll{overflow-x:auto;margin:0 0 1.5rem;-webkit-overflow-scrolling:touch}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:.9375rem;
+    line-height:1.75;
+    min-width:34rem;
+  }
+  caption{
+    caption-side:top;
+    text-align:left;
+    font-size:.875rem;
+    color:var(--ink-3);
+    padding-bottom:.9rem;
+  }
+  th,td{
+    text-align:left;
+    vertical-align:top;
+    padding:.95rem 1.1rem .95rem 0;
+    border-bottom:1px solid var(--rule-soft);
+  }
+  thead th{
+    font-weight:600;
+    font-size:.875rem;
+    color:var(--ink);
+    border-bottom:1px solid var(--rule);
+    padding-bottom:.65rem;
+  }
+  tbody th{
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+    width:8rem;
+  }
+  td{color:var(--ink-2)}
+  td strong{color:var(--ink);font-weight:600}
+  .num-cell{
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    width:5rem;
+  }
+
+  /* ---------- stages ---------- */
+  .stages{
+    margin:0;
+    padding:0;
+    list-style:none;
+    counter-reset:stage;
+  }
+  .stages li{
+    counter-increment:stage;
+    padding:1.5rem 0 1.5rem 3.1rem;
+    border-bottom:1px solid var(--rule-soft);
+    position:relative;
+  }
+  .stages li:first-child{border-top:1px solid var(--rule-soft)}
+  .stages li::before{
+    content:counter(stage,decimal-leading-zero);
+    position:absolute;
+    left:0;top:1.6rem;
+    font-size:.8125rem;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.02em;
+  }
+  .stages h4{
+    margin:0 0 .4rem;
+    font-size:1rem;
+    font-weight:600;
+  }
+  .stages p{
+    margin:0;
+    font-size:.9375rem;
+    color:var(--ink-2);
+    line-height:1.8;
+  }
+  .stages .block{
+    color:var(--ink);
+    font-weight:500;
+  }
+
+  /* ---------- gate ---------- */
+  .gate{
+    border-top:1px solid var(--rule-soft);
+    margin:0 0 1.75rem;
+  }
+  .gate-item{
+    display:grid;
+    grid-template-columns:1.5rem 1fr;
+    gap:.9rem;
+    align-items:start;
+    width:100%;
+    text-align:left;
+    background:none;
+    border:0;
+    border-bottom:1px solid var(--rule-soft);
+    padding:1.05rem 0;
+    font:inherit;
+    font-size:.9375rem;
+    line-height:1.8;
+    color:var(--ink-2);
+    cursor:pointer;
+    transition:color .18s ease;
+  }
+  .gate-item:hover{color:var(--ink)}
+  .gate-box{
+    width:1.05rem;height:1.05rem;
+    margin-top:.42rem;
+    border:1px solid #B9BCB6;
+    border-radius:2px;
+    position:relative;
+    transition:border-color .18s ease, background-color .18s ease;
+  }
+  .gate-box::after{
+    content:"";
+    position:absolute;
+    left:.32rem;top:.14rem;
+    width:.28rem;height:.52rem;
+    border:solid var(--paper);
+    border-width:0 1.5px 1.5px 0;
+    transform:rotate(45deg) scale(.5);
+    opacity:0;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .gate-item[aria-pressed="true"]{color:var(--ink)}
+  .gate-item[aria-pressed="true"] .gate-box{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .gate-item[aria-pressed="true"] .gate-box::after{
+    opacity:1;
+    transform:rotate(45deg) scale(1);
+  }
+  .gate-item:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+  }
+  .verdict{
+    display:flex;
+    gap:.75rem;
+    align-items:baseline;
+    font-size:.9375rem;
+    line-height:1.8;
+    padding:1.1rem 1.25rem;
+    background:var(--rule-soft);
+    border-left:2px solid #C6C9C2;
+    transition:background-color .25s ease, border-color .25s ease;
+  }
+  .verdict .label{
+    font-weight:600;
+    white-space:nowrap;
+    color:var(--ink-3);
+    transition:color .25s ease;
+  }
+  .verdict.open{
+    background:var(--accent-wash);
+    border-left-color:var(--accent);
+  }
+  .verdict.open .label{color:var(--accent)}
+  .verdict.open .msg{color:var(--ink)}
+
+  /* ---------- pull note ---------- */
+  .note{
+    border-left:2px solid var(--accent);
+    padding:.15rem 0 .15rem 1.35rem;
+    margin:2rem 0 0;
+    font-size:.9688rem;
+    line-height:1.85;
+    color:var(--ink-2);
+  }
+  .note strong{color:var(--ink);font-weight:600}
+
+  /* ---------- code ---------- */
+  pre{
+    font-family:var(--mono);
+    font-size:.8438rem;
+    line-height:1.75;
+    background:#EDEDE9;
+    border:1px solid var(--rule-soft);
+    border-radius:2px;
+    padding:1.1rem 1.25rem;
+    overflow-x:auto;
+    margin:0 0 1.25rem;
+    color:#2A2E31;
+  }
+  code{font-family:var(--mono);font-size:.9em}
+  p code,li code{
+    background:#EDEDE9;
+    padding:.1em .38em;
+    border-radius:2px;
+    color:#2A2E31;
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid var(--rule);
+    padding:2.5rem 0 4rem;
+    font-size:.875rem;
+    color:var(--ink-3);
+  }
+  footer p{margin:0 0 .5rem}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(43,76,126,.3)}
+  a:hover{border-bottom-color:var(--accent)}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ---------- motion ----------
+     No entrance animation by design: an opacity-0 start makes the hero
+     invisible in print, PDF export, and any renderer that does not run
+     animations. The only motion is the gate response, which is user-triggered. */
+  @media (prefers-reduced-motion: reduce){
+    *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:720px){
+    .duet{grid-template-columns:1fr}
+    .duet-col{padding-right:0}
+    .duet-col + .duet-col{
+      border-left:0;
+      border-top:1px solid var(--rule-soft);
+      padding-left:0;
+      margin-top:1.75rem;
+    }
+    .stages li{padding-left:2.6rem}
+    .verdict{flex-direction:column;gap:.35rem}
+  }
+  @media (max-width:480px){
+    body{font-size:1rem}
+    .wrap{padding:0 1.25rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">ai-plus-prompt<span class="dot"></span>Agent Skill<span class="dot"></span>V1.1.5</p>
+    <h1>同一套提示词，<br>两种完全不同的回答方式。</h1>
+    <p class="lede">一个双模式自适应推理协议。日常对话保持自然，硬约束问题自动进入四阶段推理——切换是隐式的，输出里看不到任何协议痕迹。</p>
+
+    <div class="duet">
+      <div class="duet-col">
+        <p class="mode-tag">模式 A</p>
+        <p class="mode-sub">常规对话</p>
+        <p class="ask">今天好累。</p>
+        <p class="reply">累了。是活儿堆到一起了，还是那种什么都还行、但就是提不起劲的日子？</p>
+      </div>
+      <div class="duet-col">
+        <p class="mode-tag">模式 B</p>
+        <p class="mode-sub">极限推理</p>
+        <p class="ask">证明 n³−n 能被 6 整除。</p>
+        <p class="reply tight">
+          <span class="step">n³−n = n(n−1)(n+1)，三个连续整数之积。</span>
+          <span class="step">2 与 3 互素，分别验证：三者中必有一个偶数；n mod 3 的三种情形下必有一个被 3 整除。故 6 整除它。</span>
+          <span class="step">n = 2 时值为 6，故 6 是最紧的界，不能加强到 12。</span>
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="num">一</span>它解决什么问题</h2>
+    <p class="muted">默认状态下的模型有四种可预测的失效，而且它们互相关联：</p>
+
+    <ul class="symptoms">
+      <li>
+        <span class="mark">01</span>
+        <span><b>模式错配。</b><span class="body">该闲聊时给出四点建议清单，该证明时给出一段结论摘要。同一套语气用在所有场合。</span></span>
+      </li>
+      <li>
+        <span class="mark">02</span>
+        <span><b>推理不可检验。</b><span class="body">答案读起来很笃定，但没有一行可以被指出来说"这一步错了"。它会在错误的情况下也照样成立。</span></span>
+      </li>
+      <li>
+        <span class="mark">03</span>
+        <span><b>「信息不足」成了最短出口。</b><span class="body">这句话能直接终止任务，所以在任何压力下它都最先出现——哪怕问题只是需要算一下，或者只需要反问一句。</span></span>
+      </li>
+      <li>
+        <span class="mark">04</span>
+        <span><b>长会话衰减。</b><span class="body">前五轮很好，到第十五轮时标题又回到了闲聊回复里，协议被上下文挤掉了。</span></span>
+      </li>
+    </ul>
+
+    <p class="muted">协议的四个设计分别对应这四种失效，没有一条是装饰性的。下面逐条说明。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">二</span>两种模式</h2>
+    <p class="muted">每一条回复发出之前，先对输入做意图判定，再选择执行路径。这是唯一一个在<strong>每一轮</strong>都要做的决定。</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th></th><th>模式 A · 常规对话（默认）</th><th>模式 B · 极限推理</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>触发</th>
+            <td>闲聊、情感交流、常识科普、创意发散、简单事实问答</td>
+            <td>数学证明、代码 Debug、逻辑推演、约束规划、多变量冲突、自指悖论，以及任何带「禁止 / 必须 / 最优化 / 证明」的硬约束</td>
+          </tr>
+          <tr>
+            <th>执行</th>
+            <td>自然、流畅、直接；可追问、可调侃、可承认不知道</td>
+            <td>四阶段在<strong>内部</strong>完成，输出只保留必要逻辑链</td>
+          </tr>
+          <tr>
+            <th>输出</th>
+            <td>禁止阶段标签、假设表、公式堆砌</td>
+            <td>结论加约束覆盖度自检；禁止自然语言试错叙述</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted small">判定的关键是问一句：<strong>这个答案能不能被判定为错？</strong>能，就走模式 B。不能，就走模式 A。所以"解释为什么我的代码崩溃"是模式 A——原因已知；"找出我的代码为什么崩溃"是模式 B——原因未知且必须推导出来。</p>
+
+    <p class="note">切换是隐式的。不需要用户声明，输出里也不会出现"我现在切换到模式 B"这类话。读者只会感觉到这一轮回答的分寸变了。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">三</span>四阶段推理骨架</h2>
+    <p class="muted">进入模式 B 后，以下四步在内部严格按序执行。顺序不可打乱，不可融合。</p>
+
+    <ol class="stages">
+      <li>
+        <h4>形式化与极值探测</h4>
+        <p>先把问题转成公式、变量或状态空间，算出全局不变量与上下界。<span class="block">阻断规则：未完成极值探测前，不得构造具体实例。</span></p>
+      </li>
+      <li>
+        <h4>假设树与最小冲突集</h4>
+        <p>列出候选路径 H1、H2……，每条附上置信度与推翻条件，并明确声明放弃的路径及原因。没有一条被真正放弃的假设树，等于没做这一步。</p>
+      </li>
+      <li>
+        <h4>对抗性推演与合规审查</h4>
+        <p>为每个结论构造反例，找出会<em>击穿</em>结论的那一个，而不是象征性自查。发现前序错误时标记回溯，从最近正确节点重算。</p>
+      </li>
+      <li>
+        <h4>结构化输出</h4>
+        <p>给出结论与约束覆盖度自检。<span class="block">严禁自然语言试错描述</span>（"如果把它往右移……"），输出必须短于推导过程。</p>
+      </li>
+    </ol>
+
+    <p class="note"><strong>阶段一为什么必须产出界？</strong>因为界与最终答案无关。整除证明里先算出 <code>d ≤ 6</code>，证明才存在；如果阶段一的第一行就已经写着答案，那四步是被合并了，只是看起来完整。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">四</span>三重门槛：什么时候才允许说「条件不足」</h2>
+    <p class="muted">三个条件必须<strong>同时</strong>成立。点一下，看看门槛是怎么关着的。</p>
+
+    <div class="gate">
+      <button class="gate-item" type="button" aria-pressed="false">
+        <span class="gate-box" aria-hidden="true"></span>
+        <span>已进入模式 B —— 这不是闲聊，而是本应有确定答案的问题</span>
+      </button>
+      <button class="gate-item" type="button" aria-pressed="false">
+        <span class="gate-box" aria-hidden="true"></span>
+        <span>假设树中所有候选路径的推翻条件，都无法被题干排除</span>
+      </button>
+      <button class="gate-item" type="button" aria-pressed="false">
+        <span class="gate-box" aria-hidden="true"></span>
+        <span>题面明示信息与标准学科公理已穷尽，仍无唯一解</span>
+      </button>
+    </div>
+
+    <p class="verdict" id="verdict">
+      <span class="label">未满足</span>
+      <span class="msg">不允许以「条件不足」收尾。必须继续算，或者反问一句补上缺失的输入。</span>
+    </p>
+
+    <p class="muted small" style="margin-top:1.75rem">门槛真正打开时，诚实答案通常也不是「我不知道」。示例库里的五个通过案例全部以<strong>结构性结论</strong>收尾：空集、区间、解族、下确界不存在、参数化家族。没有一个是「无法确定」。</p>
+
+    <p class="note">这句话能终止任务，所以它是任何压力下最短的出路。三重门槛的作用不是让人更谨慎，而是逼出那个更难的答案——把答案集合刻画清楚，而不是放弃刻画。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">五</span>示例库：规则能背，完成标准只能对照</h2>
+    <p class="muted">协议主体只有 100 行，示例库有 1137 行。这个比例是刻意的——条文容易记住，但"阶段一真的算出了界"和"阶段一写了一句看起来像形式化的话"，只看规则是分不出来的。</p>
+
+    <div class="table-scroll">
+      <table>
+        <caption>skills/adaptive-thinking-protocol/references/</caption>
+        <thead>
+          <tr><th>文件</th><th class="num-cell">行数</th><th>内容</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>mode-routing</th>
+            <td class="num-cell">153</td>
+            <td>四问判定法、解释与产出的区分、<strong>40 个分类示例</strong>、<strong>8 个边界案例</strong>逐条裁决</td>
+          </tr>
+          <tr>
+            <th>mode-a-playbook</th>
+            <td class="num-cell">173</td>
+            <td><strong>8 组正反例对照</strong>，篇幅标定表，以及需要删掉的协议残留词表</td>
+          </tr>
+          <tr>
+            <th>mode-b-walkthroughs</th>
+            <td class="num-cell">248</td>
+            <td><strong>4 道题完整跑完四阶段</strong>：整除证明、Python 闭包晚绑定、过桥调度最优性、自指悖论。每题给出内部推导与最终输出原文</td>
+          </tr>
+          <tr>
+            <th>insufficient-conditions</th>
+            <td class="num-cell">193</td>
+            <td><strong>5 个通过 + 6 个被驳回</strong>的案例，以及判定前必须填完的审计清单</td>
+          </tr>
+          <tr>
+            <th>anti-patterns</th>
+            <td class="num-cell">190</td>
+            <td><strong>12 种崩坏模式</strong>，每种含症状、根因、修复，另附快速诊断表</td>
+          </tr>
+          <tr>
+            <th>domain-recipes</th>
+            <td class="num-cell">180</td>
+            <td>编程、数学、数据分析、规划调度、写作论证<strong>五域特化</strong>，每域一个完整示例</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted small">示例库不是按顺序读的。SKILL.md 里有一张索引表，标明"什么情况下读哪一份"——判定不了模式时看 routing，输出开始跑偏时看 anti-patterns，准备说条件不足时看 insufficient-conditions。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">六</span>具体提升了什么</h2>
+    <p class="muted">不谈抽象的好处，只看同一个问题前后两种答法。</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>场景</th><th>默认状态</th><th>加载协议后</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>闲聊</th>
+            <td>四点建议清单，末尾问"需要我展开吗"</td>
+            <td>一句话接住，再问一个具体的问题</td>
+          </tr>
+          <tr>
+            <th>数学证明</th>
+            <td>描述这个证明，没有可检验的步骤</td>
+            <td>先算界，再给可逐步验证的推导，并说明界是最紧的</td>
+          </tr>
+          <tr>
+            <th>代码报错</th>
+            <td>罗列五种可能原因</td>
+            <td>找出最小反例定位机制，并排除其他三种可能</td>
+          </tr>
+          <tr>
+            <th>信息不全</th>
+            <td>「信息不足，无法确定」</td>
+            <td>刻画答案集合的形状，并指出缺哪一个约束</td>
+          </tr>
+          <tr>
+            <th>最优化问题</th>
+            <td>给出一个可行方案</td>
+            <td>给出方案，并证明没有更优解</td>
+          </tr>
+          <tr>
+            <th>长对话</th>
+            <td>逐渐退回默认语气</td>
+            <td>静默维持，且不向用户解释协议本身</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>代价</h3>
+    <p class="muted small">说清楚成本比只讲收益可信。三件事需要知道：</p>
+    <ul class="symptoms">
+      <li>
+        <span class="mark">—</span>
+        <span><b>上下文占用。</b><span class="body">六份示例库合计约 1137 行，全量读入会挤占上下文。所以它被设计成按需加载，索引表在 SKILL.md 里。</span></span>
+      </li>
+      <li>
+        <span class="mark">—</span>
+        <span><b>判定本身会出错。</b><span class="body">模式 A/B 的边界不是总能一刀切开。判错的代价不对称：误判成 B 只是啰嗦，误判成 A 会让证明变成空话。routing 文档里 8 个边界案例就是为这个准备的。</span></span>
+      </li>
+      <li>
+        <span class="mark">—</span>
+        <span><b>它不提升知识量。</b><span class="body">协议改变的是推理纪律和输出形态，不是模型知道什么。知识边界之外的问题，它一样答不出来——只是会更早地承认这一点。</span></span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">七</span>安装</h2>
+    <p class="muted">整个技能是一个自包含目录，复制过去即可。</p>
+
+<pre>cp -r skills/adaptive-thinking-protocol ~/.workbuddy-ai/skills/</pre>
+
+    <p class="muted small">装好后的结构：</p>
+
+<pre>~/.workbuddy-ai/skills/adaptive-thinking-protocol/
+├── SKILL.md              协议主体，约 100 行
+└── references/           示例库，6 份，约 1137 行</pre>
+
+    <p class="muted small">刷新技能列表后即可使用。协议加载后对<strong>本会话后续每一条回复</strong>持续生效，不需要重复声明，也不会在输出里提到自己。</p>
+
+    <p class="muted small">如果目标环境不支持 Skill，也可以把 <code>SKILL.md</code> 里从标题到 <code>## 4. Mandatory Discipline</code> 的正文提取出来，去掉 YAML frontmatter 和 Reference Map 两节，粘贴为 System Prompt。这个形态不含示例库，是协议的最小可用版本。</p>
+  </section>
+
+  <footer>
+    <p>ai-plus-prompt · 全场景自适应思考协议 V1.1.5</p>
+    <p>MIT License · 协议全文只有一个来源：<code>SKILL.md</code></p>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var items = Array.prototype.slice.call(document.querySelectorAll('.gate-item'));
+    var verdict = document.getElementById('verdict');
+    var label = verdict.querySelector('.label');
+    var msg = verdict.querySelector('.msg');
+
+    function update() {
+      var allOn = items.every(function (el) {
+        return el.getAttribute('aria-pressed') === 'true';
+      });
+      verdict.classList.toggle('open', allOn);
+      label.textContent = allOn ? '三条同时成立' : '未满足';
+      msg.textContent = allOn
+        ? '允许输出「条件不足」。但此时更该做的是刻画答案集合——空集、区间、解族、下确界不存在。'
+        : '不允许以「条件不足」收尾。必须继续算，或者反问一句补上缺失的输入。';
+    }
+
+    items.forEach(function (el) {
+      el.addEventListener('click', function () {
+        var on = el.getAttribute('aria-pressed') === 'true';
+        el.setAttribute('aria-pressed', on ? 'false' : 'true');
+        update();
+      });
+    });
+
+    update();
+  })();
+</script>
+
+</body>
+</html>

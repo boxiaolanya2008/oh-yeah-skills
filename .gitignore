@@ -1,0 +1,7 @@
+# WorkBuddy AI workspace data (memory, local state) — not part of the project
+.workbuddy-ai/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
