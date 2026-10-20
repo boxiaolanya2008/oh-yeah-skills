@@ -11,16 +11,18 @@ ai-plus-prompt/
 ├── README.md                    # Chinese documentation (this repo's default)
 ├── README.en.md                 # English documentation (this file)
 ├── LICENSE                      # MIT License
+├── index.html                   # Project introduction page (Chinese)
 └── skills/
     └── adaptive-thinking-protocol/
-        ├── SKILL.md             # The protocol itself (English, ~100 lines)
-        └── references/          # Example library (loaded on demand, ~1100 lines)
+        ├── SKILL.md             # The protocol itself (English, ~136 lines)
+        └── references/          # Example library (read in full at load, ~1430 lines)
             ├── mode-routing.md          # Routing: 4-question test + 40 examples + 8 borderline cases
             ├── mode-a-playbook.md       # Mode A in practice: good-vs-bad pairs
             ├── mode-b-walkthroughs.md   # Four full four-stage derivations
             ├── insufficient-conditions.md # The three gates: 5 accepted, 6 rejected
             ├── anti-patterns.md         # 12 diagnosed failure modes
-            └── domain-recipes.md        # Per-domain specialization across 5 domains
+            ├── domain-recipes.md        # Per-domain specialization across 5 domains
+            └── coding-rules.md          # Code authoring: doc comments, grouping, layout
 ```
 
 The protocol has exactly one source: `SKILL.md`. There is no parallel "Chinese original" file — a second copy is just a second place to drift.
@@ -52,9 +54,20 @@ All three must hold simultaneously:
 
 Otherwise the phrase may never be used as a brush-off — in particular, never to avoid computation, avoid resolving an ambiguity, or exit early out of laziness.
 
+### Code Authoring
+
+Whenever the reply contains code that will be saved, the same four rules apply regardless of mode:
+
+1. **Documentation comments, never bare comments.** Every symbol another person can call, import, or configure carries a doc comment. The syntax follows the host language's documentation tool (`/** */`, `"""`, `///`, `/// <summary>`, `//` above the declaration for Go); the **shape** is uniform — summary line, blank line, parameters, return, failure modes. A bare `//` or `#` is for implementation notes only and is never the sole documentation of a public symbol.
+2. **Group by kind, not by chronology.** Imports → constants → types → module-level state → private helpers → public functions → classes → entry point. Variables with variables, functions with functions. Inside a function the same principle holds: guard clauses, then the main sequence, then side effects.
+3. **Consistent visual form.** Two blank lines between top-level declarations, one between logical blocks, none inside braces. One statement per line. No trailing whitespace, no mixed indentation. Break long lines at argument boundaries.
+4. **Let the formatter win.** When a formatter config exists, its output is the definition of "beautiful". Match the surrounding file over any style guide. **Never reformat lines you did not change.**
+
+`coding-rules.md` carries the doc-comment syntax table for twelve languages, the canonical file layout, a before-and-after rewrite, and a pre-return checklist.
+
 ## The Example Library
 
-The protocol body is about 100 lines. The examples live in `references/` and load on demand. That library is where most of this project's substance sits.
+The protocol body is about 136 lines; the example library is about 1430. The skill **reads all seven files at load**, then re-reads selectively — reading `SKILL.md` alone is not enough, because that yields the vocabulary without the discipline.
 
 | File | Lines | Contents |
 |------|-------|----------|
@@ -64,6 +77,7 @@ The protocol body is about 100 lines. The examples live in `references/` and loa
 | `insufficient-conditions.md` | 193 | 5 accepted cases (contradictory constraints / no minimum on an open interval / underdetermined system / one-degree-of-freedom geometry / integer polynomial family), 6 rejected cases (primality check / tech selection / stock prediction / ambiguous sentence / missing referent / Riemann Hypothesis), and an audit checklist |
 | `anti-patterns.md` | 190 | 12 failure modes: label leakage, Mode A structural collapse, over-trigger, under-trigger, stage merging, decorative hypothesis trees, fake backtracking, insufficiency escape, protocol narration, derivation dumping, trial-and-error narration, session decay. Symptom / root cause / repair each, plus a diagnostic table |
 | `domain-recipes.md` | 180 | Stage-by-stage specialization for coding, mathematics, data analysis, planning, and argument, with one full worked example per domain |
+| `coding-rules.md` | 293 | Four authoring rules, a doc-comment syntax table for 12 languages, the canonical file layout, a six-problem before-and-after rewrite, and a 10-item pre-return checklist |
 
 ### Why the Examples Matter More Than the Rules
 
@@ -87,7 +101,7 @@ The rules can be memorized. The difference between "Stage 1 actually computed a 
 If the target environment has no skill support, the protocol body can be pasted directly:
 
 1. Open `skills/adaptive-thinking-protocol/SKILL.md`.
-2. Copy everything from `# Full-Scenario Adaptive Thinking Protocol V1.1.5` through the end of `## 4. Mandatory Discipline`.
+2. Copy everything from `# Full-Scenario Adaptive Thinking Protocol V1.1.5` through the end of `## 5. Code Authoring`.
 3. Drop the YAML frontmatter and the `Reference Map` section — the first is skill metadata, and the second points at `references/` files that do not exist in a plain-prompt context.
 
 Note that this form **excludes** the example library. It is the minimal viable version of the protocol, not the full package.
@@ -106,6 +120,9 @@ Labels are for the writer, not the reader. The reader needs the logic chain, not
 **Why three gates on "insufficient conditions"?**
 Because the phrase terminates the task, which makes it the shortest exit under any pressure to be concise. And when the gate genuinely opens, the honest answer is usually not "I don't know" but a **precise characterization** — an empty set, an interval, a solution family, an infimum that is not attained. All five accepted cases in `insufficient-conditions.md` end with a structural conclusion; none ends with ignorance.
 
+**Why does loading the skill read every sub-file instead of just `SKILL.md`?**
+Because reading `SKILL.md` alone produces a version with **complete vocabulary and no discipline** — it knows the words "Stage 1", "hypothesis tree", "three gates", but not what a passing Stage 1 looks like. The reference files hold the completion standards, and those standards do not compress into clauses. Hence the Bootstrap section: read all seven before answering the first substantive question, then do not summarize them back to the user or mention that they were read. The cost is context; it is a deliberate trade.
+
 **Why was V1.1.0 removed?**
 V1.1.0 was a single forced mode: every task ran the heavy pipeline and the full derivation was printed. It coupled reasoning depth to output format — depth could only be bought by sacrificing conversational quality. V1.1.5 decouples them: depth is guaranteed by Mode B, format is decided by the mode. One protocol means lower maintenance cost and wider coverage than two versions.
 
@@ -113,7 +130,7 @@ V1.1.0 was a single forced mode: every task ran the heavy pipeline and the full 
 
 | Tag | Artifact | Release Notes |
 |-----|----------|---------------|
-| [`v1.1.5`](../../releases/tag/v1.1.5) | `skills/adaptive-thinking-protocol/` | Dual-mode adaptive protocol with a three-gate "insufficient conditions" exit; ships with six reference files |
+| [`v1.1.5`](../../releases/tag/v1.1.5) | `skills/adaptive-thinking-protocol/` | Dual-mode adaptive protocol with a three-gate "insufficient conditions" exit and doc-comment/code-grouping rules; ships with seven reference files |
 
 ## License
 

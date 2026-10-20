@@ -552,7 +552,7 @@
 
   <section>
     <h2><span class="num">五</span>示例库：规则能背，完成标准只能对照</h2>
-    <p class="muted">协议主体只有 100 行，示例库有 1137 行。这个比例是刻意的——条文容易记住，但"阶段一真的算出了界"和"阶段一写了一句看起来像形式化的话"，只看规则是分不出来的。</p>
+    <p class="muted">协议主体约 136 行，示例库约 1430 行。这个比例是刻意的——条文容易记住，但"阶段一真的算出了界"和"阶段一写了一句看起来像形式化的话"，只看规则是分不出来的。</p>
 
     <div class="table-scroll">
       <table>
@@ -591,15 +591,62 @@
             <td class="num-cell">180</td>
             <td>编程、数学、数据分析、规划调度、写作论证<strong>五域特化</strong>，每域一个完整示例</td>
           </tr>
+          <tr>
+            <th>coding-rules</th>
+            <td class="num-cell">293</td>
+            <td>四条编码规则、<strong>12 种语言</strong>的 Doc 注释语法表、标准文件布局、改写前后对照、10 项检查清单</td>
+          </tr>
         </tbody>
       </table>
     </div>
 
-    <p class="muted small">示例库不是按顺序读的。SKILL.md 里有一张索引表，标明"什么情况下读哪一份"——判定不了模式时看 routing，输出开始跑偏时看 anti-patterns，准备说条件不足时看 insufficient-conditions。</p>
+    <p class="muted small">加载时会<strong>全量读完这七份</strong>，之后按需回查。只读 SKILL.md 是不够的——那样只会得到术语，得不到纪律。读完之后不向用户复述，也不提这件事。</p>
   </section>
 
   <section>
-    <h2><span class="num">六</span>具体提升了什么</h2>
+    <h2><span class="num">六</span>编码规则：不分语言</h2>
+    <p class="muted">只要回复里包含会被保存的代码，无论处于哪个模式，都走同一套规则。规则本身与语言无关，只有注释的语法随宿主语言变化。</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>规则</th><th>要求</th><th>反例</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>注释</th>
+            <td>公开符号一律用 <strong>Doc 注释</strong>，语法随语言：<code>/** */</code>、<code>"""</code>、<code>///</code>、<code>/// &lt;summary&gt;</code>、Go 的声明上方 <code>//</code></td>
+            <td><code>// retry</code> 写在函数上方——只是重复了函数名</td>
+          </tr>
+          <tr>
+            <th>分组</th>
+            <td>导入 → 常量 → 类型 → 模块级变量 → 私有辅助函数 → 公开函数 → 类 → 入口。<strong>变量和变量放一起，函数跟函数放一起</strong></td>
+            <td>一个常量夹在两个函数中间</td>
+          </tr>
+          <tr>
+            <th>同类语句</th>
+            <td>函数内部同理：先守卫子句，再主流程，最后副作用</td>
+            <td>校验写在它本该拦住的副作用之后</td>
+          </tr>
+          <tr>
+            <th>排版</th>
+            <td>顶层声明之间空两行，逻辑块之间空一行，括号内不空行；一行一条语句；无行尾空格</td>
+            <td>制表符与空格混用，一行塞两条语句</td>
+          </tr>
+          <tr>
+            <th>格式化工具</th>
+            <td>有 formatter 配置时它的输出就是标准；<strong>绝不重排未修改的行</strong></td>
+            <td>顺手把整段缩进从 2 空格改成 4 空格</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">最后一条最容易被忽略，也最伤协作。<strong>一个顺手重排了无关空白的 diff，会把真正的改动藏起来</strong>——评审的人要多花的时间，远超过格式化省下的那点力气。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">七</span>具体提升了什么</h2>
     <p class="muted">不谈抽象的好处，只看同一个问题前后两种答法。</p>
 
     <div class="table-scroll">
@@ -622,6 +669,11 @@
             <th>代码报错</th>
             <td>罗列五种可能原因</td>
             <td>找出最小反例定位机制，并排除其他三种可能</td>
+          </tr>
+          <tr>
+            <th>产出代码</th>
+            <td>能跑就行，函数和常量混在一起，注释只是重复函数名</td>
+            <td>Doc 注释写清前置条件与失败模式，按种类分组，排版统一</td>
           </tr>
           <tr>
             <th>信息不全</th>
@@ -647,7 +699,7 @@
     <ul class="symptoms">
       <li>
         <span class="mark">—</span>
-        <span><b>上下文占用。</b><span class="body">六份示例库合计约 1137 行，全量读入会挤占上下文。所以它被设计成按需加载，索引表在 SKILL.md 里。</span></span>
+        <span><b>上下文占用。</b><span class="body">七份示例库合计约 1430 行，加载时全量读入，确实会挤占上下文。这是明知的选择——只读 SKILL.md 会得到术语而没有纪律。长会话里如果上下文吃紧，可以改为只读索引表指定的那一份。</span></span>
       </li>
       <li>
         <span class="mark">—</span>
@@ -661,7 +713,7 @@
   </section>
 
   <section>
-    <h2><span class="num">七</span>安装</h2>
+    <h2><span class="num">八</span>安装</h2>
     <p class="muted">整个技能是一个自包含目录，复制过去即可。</p>
 
 <pre>cp -r skills/adaptive-thinking-protocol ~/.workbuddy-ai/skills/</pre>
@@ -669,12 +721,12 @@
     <p class="muted small">装好后的结构：</p>
 
 <pre>~/.workbuddy-ai/skills/adaptive-thinking-protocol/
-├── SKILL.md              协议主体，约 100 行
-└── references/           示例库，6 份，约 1137 行</pre>
+├── SKILL.md              协议主体，约 136 行
+└── references/           示例库，7 份，约 1430 行</pre>
 
     <p class="muted small">刷新技能列表后即可使用。协议加载后对<strong>本会话后续每一条回复</strong>持续生效，不需要重复声明，也不会在输出里提到自己。</p>
 
-    <p class="muted small">如果目标环境不支持 Skill，也可以把 <code>SKILL.md</code> 里从标题到 <code>## 4. Mandatory Discipline</code> 的正文提取出来，去掉 YAML frontmatter 和 Reference Map 两节，粘贴为 System Prompt。这个形态不含示例库，是协议的最小可用版本。</p>
+    <p class="muted small">如果目标环境不支持 Skill，也可以把 <code>SKILL.md</code> 里从标题到 <code>## 5. Code Authoring</code> 的正文提取出来，去掉 YAML frontmatter 和 Reference Map 两节，粘贴为 System Prompt。这个形态不含示例库，是协议的最小可用版本。</p>
   </section>
 
   <footer>
