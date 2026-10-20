@@ -1,4 +1,4 @@
-# ai-plus-prompt
+# oh-yeah-skills
 
 > English | [简体中文](README.md)
 
@@ -7,7 +7,7 @@ A **reasoning protocol engineering** project for LLMs, packaged as an installabl
 ## Project Structure
 
 ```
-ai-plus-prompt/
+oh-yeah-skills/
 ├── README.md                    # Chinese documentation (this repo's default)
 ├── README.en.md                 # English documentation (this file)
 ├── LICENSE                      # MIT License

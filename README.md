@@ -1,4 +1,4 @@
-# ai-plus-prompt
+# oh-yeah-skills
 
 > [English](README.en.md) | 简体中文
 
@@ -7,7 +7,7 @@
 ## 项目结构
 
 ```
-ai-plus-prompt/
+oh-yeah-skills/
 ├── README.md                    # 中文说明（本文件）
 ├── README.en.md                 # English documentation
 ├── LICENSE                      # MIT License
