@@ -115,7 +115,7 @@ The rules can be memorized. The difference between "Stage 1 actually computed a 
 | Loop prohibition | Intent-level compliance review | 4 |
 | Pelican on a bicycle (SVG) | Artifact quality | 5 |
 
-> V1.0 and V1.1 are the version labels used at test time and correspond to earlier iterations of this protocol; the current repository implements V1.1.5. Every raw record is in the share link above, so each row can be checked against the original.
+> V1.0 and V1.1 are the version labels used at test time and correspond to earlier iterations of this protocol; they are kept only to preserve the original comparison. Every raw record is in the share link above, so each row can be checked against the original.
 
 ## Quick Start
 
@@ -130,7 +130,7 @@ The rules can be memorized. The difference between "Stage 1 actually computed a 
 If the target environment has no skill support, the protocol body can be pasted directly:
 
 1. Open `skills/adaptive-thinking-protocol/SKILL.md`.
-2. Copy everything from `# Full-Scenario Adaptive Thinking Protocol V1.1.5` through the end of `## 5. Code Authoring`.
+2. Copy everything from `# Full-Scenario Adaptive Thinking Protocol` through the end of `## 5. Code Authoring`.
 3. Drop the YAML frontmatter and the `Reference Map` section — the first is skill metadata, and the second points at `references/` files that do not exist in a plain-prompt context.
 
 Note that this form **excludes** the example library. It is the minimal viable version of the protocol, not the full package.
@@ -140,7 +140,7 @@ Note that this form **excludes** the example library. It is the minimal viable v
 **Why does the protocol carry an `Activation and Persistence` section?**
 A system prompt is always in force; a skill is **loaded on demand**. Without an explicit statement that it governs the whole session, runs silently, and is never explained to the user, the model may only follow the protocol for the turn that triggered it. That section introduces no new reasoning rules — it only fixes the scope.
 
-**Why was the Chinese original `1.1.5.md` removed?**
+**Why was the Chinese original removed?**
 Because it and `SKILL.md` were two copies of the same protocol. The cost of keeping both is not the extra bytes — it is the certainty of drift: one side gets edited and the other does not, and a reader has no way to tell which one is authoritative. Now there is a single source, and both READMEs describe rather than duplicate the protocol. The Chinese text remains available in git history.
 
 **Why forbid stage labels while requiring the logic to stay traceable?**
@@ -152,14 +152,11 @@ Because the phrase terminates the task, which makes it the shortest exit under a
 **Why does loading the skill read every sub-file instead of just `SKILL.md`?**
 Because reading `SKILL.md` alone produces a version with **complete vocabulary and no discipline** — it knows the words "Stage 1", "hypothesis tree", "three gates", but not what a passing Stage 1 looks like. The reference files hold the completion standards, and those standards do not compress into clauses. Hence the Bootstrap section: read all seven before answering the first substantive question, then do not summarize them back to the user or mention that they were read. The cost is context; it is a deliberate trade.
 
-**Why was V1.1.0 removed?**
-V1.1.0 was a single forced mode: every task ran the heavy pipeline and the full derivation was printed. It coupled reasoning depth to output format — depth could only be bought by sacrificing conversational quality. V1.1.5 decouples them: depth is guaranteed by Mode B, format is decided by the mode. One protocol means lower maintenance cost and wider coverage than two versions.
+**Why keep only one protocol instead of also shipping a "single forced mode" build?**
+An earlier iteration used a single forced mode: every task ran the heavy pipeline and the full derivation was printed. That coupled reasoning depth to output format — depth could only be bought by sacrificing conversational quality. The current design decouples them: depth is guaranteed by Mode B, format is decided by the mode. One protocol means lower maintenance cost and wider coverage than several.
 
-## Tags & Releases
-
-| Tag | Artifact | Release Notes |
-|-----|----------|---------------|
-| [`v1.1.5`](../../releases/tag/v1.1.5) | `skills/adaptive-thinking-protocol/` | Dual-mode adaptive protocol with a three-gate "insufficient conditions" exit and doc-comment/code-grouping rules; ships with seven reference files |
+**Why no version numbers?**
+There is one protocol, and `SKILL.md` is it. A version number carries no information in a project with a single artifact — a reader gets the current state and has nothing to compare it against. What actually deserves a record is **why a decision was made**, and that lives in the trade-offs above, where it is more useful than a `v1.x.x` label. History is in `git log`.
 
 ## License
 
