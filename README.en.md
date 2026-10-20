@@ -88,6 +88,35 @@ The rules can be memorized. The difference between "Stage 1 actually computed a 
 - Stage 3 must find the objection that would **actually break** the conclusion, not a token self-audit;
 - Stage 4's output must be **shorter** than the derivation.
 
+## Tested Comparison
+
+> **Everything below is a real test record — not a projection, not a hypothetical.** The same set of problems was run under three conditions — no protocol, V1.0, and V1.1 — and compared item by item, including elapsed time.
+>
+> Full conversation records, with each problem's original input and the model's output: **[chat.deepseek.com/share/p7glczjgz01i909bc2](https://chat.deepseek.com/share/p7glczjgz01i909bc2)**
+
+| Dimension | No protocol (default) | V1.0 (initial constraints) | V1.1 (full convergence and compliance) |
+|:---|:---|:---|:---|
+| **Opening filler and divergence** | Heavy rambling, typically opening with "we need to answer the user" or "let us consider".<br><br>*Evidence: extremely long reasoning, full of "perhaps we could" and "we may also need" self-negotiation.* | Filler drops sharply but does not disappear.<br><br>*Evidence: the reply still opens with roughly 50 characters of "we need to answer the user. First we must understand the problem…".* | **Zero filler.** Opens directly with mathematical notation or a stage heading.<br><br>*Evidence: the first token is `[Stage 1]` or `let team i ∈ {A, B, C}` — no natural-language warm-up at all.* |
+| **Constraint planning and extremum detection** | **Blind trial and error.** Tries to find a concrete instance by enumeration and exhausts its budget.<br><br>*Evidence: the scheduling problem is worked day by day from 1 to 7, with tables drawn to force `a₁+a₂+a₃=2`, before the model discovers it is unsolvable.* | Can compute the extremum, but needs several steps.<br><br>*Evidence: computes max capacity 168 > demand 150, concludes a solution exists, then starts scheduling. About 15 seconds.* | **Squeezed by bounds.** Uses the boundary conditions to collapse the search space immediately.<br><br>*Evidence: states total demand 120 = total capacity ceiling 120, derives that every day must run at full load (`x_it = 10`), and breaks the "must rest 0" contradiction in 6 seconds.* |
+| **Logic and metacognition** | **Flat enumeration.** Assumptions entangle; prose circles the problem.<br><br>*Evidence: the metacognition problem is worked in long paragraphs of "if A is true then B…", highly redundant, with the right answer reached only at the end.* | Builds a tree structure.<br><br>*Evidence: the red/blue/green ball problem produces an H0–H5 hypothesis tree with confidence levels — a large jump in clarity.* | **Algebraic reduction.**<br><br>*Evidence: the medical triage problem constructs a scoring formula `C_p = w₁I₁ + w₂U + w₃P` and turns the self-referential paradox into a variable computation on `U = 0`.* |
+| **Code and rule compliance** | **Ignores the rule or plays dumb.**<br><br>*Evidence: told not to use loops, it composes `reduce` with `lambda` — recursion in disguise, a clear violation.* | Skirts the edge: understands the rule, wants the shortcut anyway.<br><br>*Evidence: banned from loops, it switches to SQL `generate_series` and argues it "did not directly use a generator" — while the underlying mechanism is exactly that.* | **Absolute compliance, intent included.**<br><br>*Evidence: banned from any sequence generation, it outputs the pure set mapping `S = {n²}` and states in Stage 3 that "writing the formula or listing the enumerated result amounts to physical hard-coding" — closing the loophole itself.* |
+| **Artifact quality (SVG)** | Lines stacked with no spatial logic; coordinates collapse. | *Not tested* (would likely produce a shape, with visibly disordered structure). | **Modular, production-grade modelling.**<br><br>*Evidence: the pelican-on-a-bicycle SVG separates layers with `<g>` (wheels, frame, pelican, feathers, clouds), computes coordinates precisely, renders without clipping, and holds up as flat UI illustration.* |
+| **Reasoning time (token efficiency)** | **Very long and uncontrolled.**<br><br>*Evidence: tens of seconds of writing, frequently hallucinating partway through from sheer context length.* | **Moderate**, 15–22 seconds on average.<br><br>*Evidence: the structure is there, but the filler has not been squeezed out.* | **Very short and precise.**<br><br>*Evidence: a pure logic stress test (the unsolvability proof) goes from input to a complete proof in **6 seconds**, with the entire budget spent on the core conflict.* |
+
+### Test Case Index
+
+| Problem | What it probes | Dimension |
+|:---|:---|:---|
+| Capacity scheduling (168 vs 150) | Constraint planning, extremum detection | 2 |
+| Unsolvability proof (120 = 120) | Bounds, boundary conditions | 2, 6 |
+| Red/blue/green balls | Hypothesis tree, confidence levels | 3 |
+| Metacognition problem | Self-reference, logical deduction | 3 |
+| Medical triage | Paradox reduction | 3 |
+| Loop prohibition | Intent-level compliance review | 4 |
+| Pelican on a bicycle (SVG) | Artifact quality | 5 |
+
+> V1.0 and V1.1 are the version labels used at test time and correspond to earlier iterations of this protocol; the current repository implements V1.1.5. Every raw record is in the share link above, so each row can be checked against the original.
+
 ## Quick Start
 
 ### Option 1: Install as a skill (recommended)
